@@ -1,0 +1,139 @@
+"""
+Created on Wed May  1 02:43:19 2019
+
+@author: S2B
+
+"""
+import numpy 
+from matplotlib import pyplot as plt
+import os,glob
+
+folder_path = '\Midterm\A'
+for filename in glob.glob(os.path.join('*.dat')):
+  with open(filename, 'r') as f:
+  
+    f.readline()
+    x, y = numpy.loadtxt(f, dtype=str, unpack=True)
+    
+    x = [float(i) for i in x]
+    y = [float(i) for i in y]
+
+    def normalize(x,y):
+        
+        x[-1]=1
+        y[-1]=0
+        x[0]=1
+        y[-1]=0    
+        xnew=numpy.asarray([x,y])
+        
+        titlename = filename[:-4]
+    
+        # plot the geometry
+        plt.figure(figsize= (20,20))
+        plt.ylim(ymax=.8)
+        plt.ylim(ymin=-.8)
+        plt.grid()
+        plt.plot(x, y, color='k', linestyle='-', linewidth=2)
+        plt.axis('scaled', adjustable='box')
+        plt.suptitle(titlename, fontsize=17-int(len(titlename)/20))
+        file = open('/users/S2B/Desktop/textler/'+titlename+'.dat', "w")
+        for index in range(len(x)):
+            file.write(str(x[index]) + "      " + str(y[index]) + "\n")
+        file.close()
+     
+     
+     def camberline(x,y):
+        
+        min_indx = numpy.argmin(x)
+      
+        distance=0
+        temp=0
+        indexlow=0
+        camber=[]
+        
+        for i in range(numpy.int(len(y)/2)):           ##maximum thickness were found by this loop 
+            temp=y[i]-y[-1-i]
+            
+            if temp>distance:
+                distance=temp
+                indexup=i
+                indexlow=numpy.int(-1-i)
+    
+        print(distance)
+        
+       
+        upper_x = x[:min_indx+1]
+        lower_x = x[min_indx:]
+        upper_y = y[:min_indx+1]
+        lower_y = y[min_indx:]
+        interp_x = numpy.linspace(0, 1, 20*1+1) # set it 21*STEPS to increase accuracy.
+        upper_y = numpy.interp(interp_x, upper_x[::-1], upper_y[::-1])[::-1] #upper_x should be increasing
+        lower_y = numpy.interp(interp_x, lower_x, lower_y)[::-1]
+            
+        camber=((upper_y+lower_y)/2)
+     
+    
+        width = 10
+        pyplot.figure(figsize=(width, width))
+        pyplot.grid()
+        pyplot.xlabel('x', fontsize=16)
+        pyplot.ylabel('y', fontsize=16)
+        pyplot.plot(xc,yc,linestyle='-')
+        pyplot.plot(x, y, color='k', linestyle='-', linewidth=2)
+        pyplot.axis('scaled', adjustable='box')
+        pyplot.title(titlename)
+        pyplot.plot(interp_x,camber)
+        plt.plot([x[indexlow],x[indexlow]],[y[indexlow],y[indexup]],'ro')
+        plt.savefig('/users/S2B/Desktop/partbfig/'+filename+'.png')
+        plt.annotate(s='max thickness is ' + str(round(distance*100,1))+
+'% at ' + str(round(interp_x[indexup]))+'% of the chord',xy=(0.4,max(upper_y)-distance/2)
+,xytext=(0.4,max(upper_y)/2+0.2),color='black',arrowprops=dict(arrowstyle='<-', color='black'))
+         
+      
+    def panels(x,y):
+    
+        min_indx = np.argmin(x)
+        upper_x = x[:min_indx+1]
+        lower_x = x[min_indx:]
+        upper_y = y[:min_indx+1]
+        lower_y = y[min_indx:]
+        interp_x = np.linspace(0, 1, 20*1+1) # set it 21*STEPS to increase accuracy.
+        upper_y = np.interp(interp_x, upper_x[::-1], upper_y[::-1])[::-1] #upper_x should be increasing
+        lower_y = np.interp(interp_x, lower_x, lower_y)
+    
+        
+        
+        #panels
+        px = (x[1:]+x[:-1])/2
+        py = (y[1:]+y[:-1])/2
+        
+        
+        #tangents
+        
+        tx = x[1:]-x[:-1]
+        ty = y[1:]-y[:-1]
+        
+        #normals
+        
+        nx =  ty
+        ny = -tx
+        
+        #normalizing
+        n_ = (nx**2+ny**2)**.5
+        nx = nx/n_
+        ny = ny/n_
+            
+        width = 10
+        plt.figure(figsize=(width, width))
+        plt.xlabel('x', fontsize=16)
+        plt.ylabel('y', fontsize=16)
+        plt.grid()
+        plt.plot(px,py,'.')
+        plt.plot(x,y,'-')
+        plt.axes().set_aspect(1,'datalim')
+        plt.quiver(px,py,nx,ny)
+        plt.savefig('/users/S2B/Desktop/panels/'+filename+'.png')
+        
+    panels(x,y)
+    
+    
